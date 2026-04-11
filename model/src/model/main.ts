@@ -1,5 +1,6 @@
 export interface Constants {
-  colonizationPenalty: number
+  colonizationCost: number
+  colonizationDelay: number
   baseLogistic: boolean
   baseCapacity?: number
   colonyLogistic: boolean
@@ -46,6 +47,7 @@ export const evaluate = (
     colonyProductivity: 0,
   }
   let data = [structuredClone(state)]
+  let decisions: Decision[] = []
   for (
     let currentGeneration = 0;
     currentGeneration < generation;
@@ -54,24 +56,37 @@ export const evaluate = (
     const generationGrowth = 2 ** (1 / 12) - 1
 
     const decision = strategy(state, constants)
-    // logistic growth
+    if (
+      decision.baseInvestment + decision.colonyInvestment >
+      state.baseProductivity
+    ) {
+      throw new Error()
+    }
+
+    decisions.push(structuredClone(decision))
+
+    const baseLogisticFactor = constants.baseLogistic
+      ? 1 - state.baseProductivity / (constants.baseCapacity ?? Infinity)
+      : 1
+
     state.baseProductivity +=
-      generationGrowth *
-      decision.baseInvestment *
-      (1 -
-        state.baseProductivity /
-          (constants.baseLogistic
-            ? (constants.baseCapacity ?? Infinity)
-            : Infinity))
+      generationGrowth * decision.baseInvestment * baseLogisticFactor
+
+    const colonyLogisticFactor = constants.colonyLogistic
+      ? 1 - state.colonyProductivity / (constants.colonyCapacity ?? Infinity)
+      : 1
+
+    const receivedColonyInvestment =
+      currentGeneration >= constants.colonizationDelay
+        ? decisions[currentGeneration - constants.colonizationDelay]
+            .colonyInvestment
+        : 0
+
     state.colonyProductivity +=
       generationGrowth *
-      (decision.colonyInvestment / constants.colonizationPenalty +
+      (receivedColonyInvestment / constants.colonizationCost +
         state.colonyProductivity) *
-      (1 -
-        state.colonyProductivity /
-          (constants.colonyLogistic
-            ? (constants.colonyCapacity ?? Infinity)
-            : Infinity))
+      colonyLogisticFactor
 
     data.push(structuredClone(state))
   }

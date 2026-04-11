@@ -40,7 +40,8 @@ const ConfigSection = (props: { title: string; children?: any }) => {
 
 export const Model = () => {
   const [constants, setConstants] = createSignal<Constants>({
-    colonizationPenalty: 5,
+    colonizationCost: 5,
+    colonizationDelay: 1,
     baseLogistic: true,
     baseCapacity: 10,
     colonyLogistic: true,
@@ -98,7 +99,7 @@ export const Model = () => {
               minValue={1}
               // a very high value results in performance issues
               maxValue={1200}
-              onChange={setGeneration}
+              onChange={(x) => setGeneration(parseFloat(x))}
             >
               <NumberFieldLabel>Simulate Generation</NumberFieldLabel>
               <NumberFieldGroup>
@@ -130,7 +131,7 @@ export const Model = () => {
                 required
                 minValue={1}
                 onChange={(x) =>
-                  setConstants((c) => ({ ...c, baseCapacity: Number(x) }))
+                  setConstants((c) => ({ ...c, baseCapacity: parseFloat(x) }))
                 }
               >
                 <NumberFieldLabel>Capacity</NumberFieldLabel>
@@ -162,7 +163,7 @@ export const Model = () => {
                 required
                 minValue={1}
                 onChange={(x) =>
-                  setConstants((c) => ({ ...c, colonyCapacity: Number(x) }))
+                  setConstants((c) => ({ ...c, colonyCapacity: parseFloat(x) }))
                 }
               >
                 <NumberFieldLabel>Capacity</NumberFieldLabel>
@@ -176,15 +177,35 @@ export const Model = () => {
           </ConfigSection>
           <ConfigSection title="Colonization Penalty">
             <NumberField
-              value={constants().colonizationPenalty}
+              value={constants().colonizationCost}
               defaultValue={2}
               required
               minValue={1}
               onChange={(x) =>
-                setConstants((c) => ({ ...c, colonizationPenalty: Number(x) }))
+                setConstants((c) => ({ ...c, colonizationCost: parseFloat(x) }))
               }
             >
-              <NumberFieldLabel>Coefficient</NumberFieldLabel>
+              <NumberFieldLabel>Coefficient Cost</NumberFieldLabel>
+              <NumberFieldGroup>
+                <NumberFieldDecrementTrigger aria-label="Decrement" />
+                <NumberFieldInput />
+                <NumberFieldIncrementTrigger aria-label="Increment" />
+              </NumberFieldGroup>
+            </NumberField>
+
+            <NumberField
+              value={constants().colonizationDelay}
+              defaultValue={1}
+              required
+              minValue={0}
+              onChange={(x) =>
+                setConstants((c) => ({
+                  ...c,
+                  colonizationDelay: parseFloat(x),
+                }))
+              }
+            >
+              <NumberFieldLabel>Delay</NumberFieldLabel>
               <NumberFieldGroup>
                 <NumberFieldDecrementTrigger aria-label="Decrement" />
                 <NumberFieldInput />
