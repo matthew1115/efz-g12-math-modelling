@@ -22,9 +22,17 @@ export const Chart = (props: { data: ChartDataset[] }) => {
         scales: {
           x: {
             type: 'linear',
+            title: {
+              display: true,
+              text: 'Generation',
+            },
           },
           y: {
             beginAtZero: true,
+            title: {
+              display: true,
+              text: 'Net Productivity',
+            },
           },
         },
       },

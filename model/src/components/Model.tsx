@@ -12,10 +12,10 @@ import { evaluate, neverColonize, porportionalColonize } from '@/model/main'
 export const Model = () => {
   const neverColonizeResult = evaluate(
     {
-      initialBaseProductivity: 100,
+      initialBaseProductivity: 1,
       colonizationPenalty: 5,
-      baseCapacity: 1000,
-      colonyCapacity: 500,
+      baseCapacity: 10,
+      colonyCapacity: 5,
     },
     neverColonize,
     100,
@@ -23,10 +23,10 @@ export const Model = () => {
 
   const proportionalColonizeResult = evaluate(
     {
-      initialBaseProductivity: 100,
+      initialBaseProductivity: 1,
       colonizationPenalty: 5,
-      baseCapacity: 1000,
-      colonyCapacity: 500,
+      baseCapacity: 10,
+      colonyCapacity: 5,
     },
     porportionalColonize(1 / 2),
     100,
@@ -36,7 +36,7 @@ export const Model = () => {
     <Card class="w-2xl max-w-[90vw]" slot="preview">
       <CardHeader>
         <CardTitle>Model</CardTitle>
-        <CardDescription>TODO</CardDescription>
+        <CardDescription>Generation = 1/12 of Doubling Period</CardDescription>
       </CardHeader>
       <CardContent class="flex flex-col gap-4">
         <Chart
