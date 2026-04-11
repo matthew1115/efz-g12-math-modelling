@@ -1,12 +1,22 @@
-import { createUniqueId, onMount } from 'solid-js'
+import { createEffect, createSignal, createUniqueId, onMount } from 'solid-js'
 import ChartJS, { type ChartDataset } from 'chart.js/auto'
 
 export const Chart = (props: { data: ChartDataset[] }) => {
   const id = createUniqueId()
 
+  let [chart, setChart] = createSignal<ChartJS | null>(null)
+
+  createEffect(() => {
+    const c = chart()
+    if( c) {
+      c.data.datasets = props.data
+      c.update()
+    }
+  })
+
   onMount(() => {
     const canvas = document.getElementById(id) as HTMLCanvasElement
-    new ChartJS(canvas, {
+    const c  = new ChartJS(canvas, {
       type: 'line',
       data: {
         datasets: props.data,
@@ -37,6 +47,7 @@ export const Chart = (props: { data: ChartDataset[] }) => {
         },
       },
     })
+    setChart(c)
   })
 
   return (
