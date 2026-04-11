@@ -44,16 +44,21 @@ const evaluate = (
     baseProductivity: constants.initialBaseProductivity,
     colonyProductivity: 0,
   }
-  for (let currentMonth = 0; currentMonth < generation; currentMonth++) {
-    console.info(
-      `Generation ${currentMonth} total productivity ${state.baseProductivity + state.colonyProductivity}`,
-    )
+  for (
+    let currentGeneration = 0;
+    currentGeneration < generation;
+    currentGeneration++
+  ) {
+    const generationGrowth = 2 ** (1 / 12) - 1
+
     const decision = strategy(state, constants)
     // logistic growth
     state.baseProductivity +=
+      generationGrowth *
       decision.baseInvestment *
       (1 - state.baseProductivity / constants.baseCapacity)
     state.colonyProductivity +=
+      generationGrowth *
       (decision.colonyInvestment / constants.colonizationPenalty +
         state.colonyProductivity) *
       (1 - state.colonyProductivity / constants.colonyCapacity)
@@ -69,10 +74,10 @@ const result1 = evaluate(
     colonyCapacity: 500,
   },
   neverColonize,
-  10,
+  120,
 )
 
-console.info(`Total productivity after 10 generations: ${result1}`)
+console.info(`Total productivity after 120 generations: ${result1}`)
 
 const result2 = evaluate(
   {
@@ -82,7 +87,7 @@ const result2 = evaluate(
     colonyCapacity: 500,
   },
   porportionalColonize(0.5),
-  10,
+  120,
 )
 
-console.info(`Total productivity after 10 generations: ${result2}`)
+console.info(`Total productivity after 120 generations: ${result2}`)
