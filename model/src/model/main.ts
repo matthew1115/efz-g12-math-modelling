@@ -1,6 +1,7 @@
 export const GENERATION_GROWTH = 2 ** (1 / 12) - 1
 
 export interface Constants {
+  generation: number
   colonizationCost: number
   colonizationDelay: number
   baseLogistic: boolean
@@ -19,9 +20,17 @@ export interface Decision {
   colonyInvestment: number
 }
 
-type Strategy = (state: CurrentState, constants: Constants) => Decision
+type Strategy = (
+  state: CurrentState,
+  constants: Constants,
+  currentGeneration: number,
+) => Decision
 
-export const neverColonize: Strategy = (state, constants) => {
+export const neverColonize: Strategy = (
+  state,
+  constants,
+  currentGeneration,
+) => {
   return {
     baseInvestment: state.baseProductivity,
     colonyInvestment: 0,
@@ -30,7 +39,7 @@ export const neverColonize: Strategy = (state, constants) => {
 
 export const porportionalColonize =
   (k: number): Strategy =>
-  (state, constants) => {
+  (state, constants, currentGeneration) => {
     const colonyInvestment = state.baseProductivity * k
     const baseInvestment = state.baseProductivity - colonyInvestment
     return {
@@ -41,7 +50,7 @@ export const porportionalColonize =
 
 export const pieceWiseColonise =
   (threshold: number, k: number): Strategy =>
-  (state, constants) => {
+  (state, constants, currentGeneration) => {
     if (!constants.baseLogistic || !constants.baseCapacity) {
       return {
         baseInvestment: state.baseProductivity,
@@ -49,12 +58,16 @@ export const pieceWiseColonise =
       }
     }
     if (state.baseProductivity / constants.baseCapacity > threshold) {
-      return porportionalColonize(k)(state, constants)
+      return porportionalColonize(k)(state, constants, currentGeneration)
     }
-    return neverColonize(state, constants)
+    return neverColonize(state, constants, currentGeneration)
   }
 
-export const greedyColonize: Strategy = (state, constants) => {
+export const greedyColonize: Strategy = (
+  state,
+  constants,
+  currentGeneration,
+) => {
   const baseLogisticFactor = constants.baseLogistic
     ? 1 - state.baseProductivity / (constants.baseCapacity ?? Infinity)
     : 1
@@ -82,7 +95,11 @@ export const greedyColonize: Strategy = (state, constants) => {
   }
 }
 
-export const softGreedyColonize: Strategy = (state, constants) => {
+export const softGreedyColonize: Strategy = (
+  state,
+  constants,
+  currentGeneration,
+) => {
   const baseLogisticFactor = constants.baseLogistic
     ? 1 - state.baseProductivity / (constants.baseCapacity ?? Infinity)
     : 1
@@ -99,13 +116,12 @@ export const softGreedyColonize: Strategy = (state, constants) => {
 
   const k = diffColony / (diffBase + diffColony)
 
-  return porportionalColonize(k)(state, constants)
+  return porportionalColonize(k)(state, constants, currentGeneration)
 }
 
 export const evaluate = (
   constants: Constants,
   strategy: Strategy,
-  generation: number,
 ): CurrentState[] => {
   const state: CurrentState = {
     baseProductivity: 1,
@@ -115,12 +131,12 @@ export const evaluate = (
   let decisions: Decision[] = []
   for (
     let currentGeneration = 0;
-    currentGeneration < generation;
+    currentGeneration < constants.generation;
     currentGeneration++
   ) {
     const generationGrowth = 2 ** (1 / 12) - 1
 
-    const decision = strategy(state, constants)
+    const decision = strategy(state, constants, currentGeneration)
     if (
       decision.baseInvestment + decision.colonyInvestment >
       state.baseProductivity + 0.001 // float precision

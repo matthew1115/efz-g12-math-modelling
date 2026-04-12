@@ -54,6 +54,7 @@ const ConfigSection = (props: { title: string; children?: any }) => {
 
 export const Model = () => {
   const [constants, setConstants] = createSignal<Constants>({
+    generation: 120,
     colonizationCost: 5,
     colonizationDelay: 1,
     baseLogistic: true,
@@ -61,8 +62,6 @@ export const Model = () => {
     colonyLogistic: true,
     colonyCapacity: 5,
   })
-
-  const [generation, setGeneration] = createSignal(120)
 
   const [neverColonizeEnabled, setNeverColonizeEnabled] = createSignal(true)
 
@@ -82,22 +81,17 @@ export const Model = () => {
     createSignal(false)
 
   const neverColonizeResult = createMemo(() => {
-    return evaluate(constants(), neverColonize, generation())
+    return evaluate(constants(), neverColonize)
   })
 
   const proportionalColonizeResult = createMemo(() => {
-    return evaluate(
-      constants(),
-      porportionalColonize(proportion()),
-      generation(),
-    )
+    return evaluate(constants(), porportionalColonize(proportion()))
   })
 
   const data = createMemo(() => {
     const piecewiseColonizeResult = evaluate(
       constants(),
       pieceWiseColonise(1 / 2, 1 / 2),
-      generation(),
     )
 
     const data: ChartDataset[] = []
@@ -138,12 +132,10 @@ export const Model = () => {
     if (greedyColonizeEnabled()) {
       data.push({
         label: 'Greedy',
-        data: evaluate(constants(), greedyColonize, generation()).map(
-          (state, index) => ({
-            x: index,
-            y: state.baseProductivity + state.colonyProductivity,
-          }),
-        ),
+        data: evaluate(constants(), greedyColonize).map((state, index) => ({
+          x: index,
+          y: state.baseProductivity + state.colonyProductivity,
+        })),
         borderWidth: 1,
       })
     }
@@ -151,12 +143,10 @@ export const Model = () => {
     if (softGreedyColonizeEnabled()) {
       data.push({
         label: 'Soft Greedy',
-        data: evaluate(constants(), softGreedyColonize, generation()).map(
-          (state, index) => ({
-            x: index,
-            y: state.baseProductivity + state.colonyProductivity,
-          }),
-        ),
+        data: evaluate(constants(), softGreedyColonize).map((state, index) => ({
+          x: index,
+          y: state.baseProductivity + state.colonyProductivity,
+        })),
         borderWidth: 1,
       })
     }
@@ -188,13 +178,18 @@ export const Model = () => {
             <TabsContent value="constants">
               <ConfigSection title="Generic">
                 <NumberField
-                  value={generation()}
+                  value={constants().generation}
                   defaultValue={120}
                   required
                   minValue={1}
                   // a very high value results in performance issues
                   maxValue={1200}
-                  onChange={(x) => setGeneration(parseFloat(x))}
+                  onChange={(x) =>
+                    setConstants((c) => ({
+                      ...c,
+                      generation: parseInt(x.replace(/,/g, '')),
+                    }))
+                  }
                 >
                   <NumberFieldLabel>Simulate Generation</NumberFieldLabel>
                   <NumberFieldGroup>
@@ -228,7 +223,7 @@ export const Model = () => {
                     onChange={(x) =>
                       setConstants((c) => ({
                         ...c,
-                        baseCapacity: parseFloat(x),
+                        baseCapacity: parseFloat(x.replace(/,/g, '')),
                       }))
                     }
                   >
@@ -263,7 +258,7 @@ export const Model = () => {
                     onChange={(x) =>
                       setConstants((c) => ({
                         ...c,
-                        colonyCapacity: parseFloat(x),
+                        colonyCapacity: parseFloat(x.replace(/,/g, '')),
                       }))
                     }
                   >
@@ -285,7 +280,7 @@ export const Model = () => {
                   onChange={(x) =>
                     setConstants((c) => ({
                       ...c,
-                      colonizationCost: parseFloat(x),
+                      colonizationCost: parseFloat(x.replace(/,/g, '')),
                     }))
                   }
                 >
@@ -305,7 +300,7 @@ export const Model = () => {
                   onChange={(x) =>
                     setConstants((c) => ({
                       ...c,
-                      colonizationDelay: parseFloat(x),
+                      colonizationDelay: parseFloat(x.replace(/,/g, '')),
                     }))
                   }
                 >
