@@ -10,6 +10,7 @@ import {
 import {
   evaluate,
   neverColonize,
+  pieceWiseColonise,
   porportionalColonize,
   type Constants,
 } from '@/model/main'
@@ -59,6 +60,11 @@ export const Model = () => {
   })
 
   const data = createMemo(() => {
+    const piecewiseColonizeResult = evaluate(
+      constants(),
+      pieceWiseColonise(1 / 2, 1 / 2),
+      generation(),
+    )
     return [
       {
         label: 'Never Colonize',
@@ -71,6 +77,14 @@ export const Model = () => {
       {
         label: 'Proportional Colonize',
         data: proportionalColonizeResult().map((state, index) => ({
+          x: index,
+          y: state.baseProductivity + state.colonyProductivity,
+        })),
+        borderWidth: 1,
+      },
+      {
+        label: 'Piecewise Colonize',
+        data: piecewiseColonizeResult.map((state, index) => ({
           x: index,
           y: state.baseProductivity + state.colonyProductivity,
         })),

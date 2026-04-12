@@ -37,6 +37,21 @@ export const porportionalColonize =
     }
   }
 
+export const pieceWiseColonise =
+  (threshold: number, k: number): Strategy =>
+  (state, constants) => {
+    if (!constants.baseLogistic || !constants.baseCapacity) {
+      return {
+        baseInvestment: state.baseProductivity,
+        colonyInvestment: 0,
+      }
+    }
+    if (state.baseProductivity / constants.baseCapacity > threshold) {
+      return porportionalColonize(k)(state, constants)
+    }
+    return neverColonize(state, constants)
+  }
+
 export const evaluate = (
   constants: Constants,
   strategy: Strategy,
