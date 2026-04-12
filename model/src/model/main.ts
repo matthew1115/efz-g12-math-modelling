@@ -130,37 +130,40 @@ export const eulerColonize: Strategy = (
   // 容量因子（若无容量则视为1，但逻辑斯蒂存在时用饱和因子）
   const baseSat =
     constants.baseLogistic && constants.baseCapacity
-      ? 1 - state.baseProductivity / constants.baseCapacity
+      ? Math.max(0, 1 - state.baseProductivity / constants.baseCapacity)
       : 1
   const colonySat =
     constants.colonyLogistic && constants.colonyCapacity
-      ? 1 - state.colonyProductivity / constants.colonyCapacity
+      ? Math.max(0, 1 - state.colonyProductivity / constants.colonyCapacity)
       : 1
 
   // 基础影子价格：剩余时间内基础饱和因子的积分近似
-  // 假设未来分配近似于softGreedy，则基础饱和因子随时间下降，粗略用指数衰减近似
   const lambdaBase = (baseSat * (Math.exp(g * remaining) - 1)) / g
 
-  // 殖民地影子价格：殖民地饱和因子乘以类似积分，但考虑成本与延迟贴现
+  // 殖民地影子价格：需要确保有效剩余时间非负
+  const effectiveRemaining = Math.max(
+    0,
+    remaining - constants.colonizationDelay,
+  )
   const lambdaColony =
-    (colonySat *
-      (Math.exp(g * (remaining - constants.colonizationDelay)) - 1)) /
-    g /
-    constants.colonizationCost
+    effectiveRemaining > 0
+      ? (colonySat * (Math.exp(g * effectiveRemaining) - 1)) /
+        g /
+        constants.colonizationCost
+      : 0 // 若没有有效时间，殖民地无价值
 
-  // 等边际条件：lambdaBase = u * lambdaBase + (1-u) * lambdaColony? 不对，应该是边际转换率相等
-  // 一单位产出用于基础得 lambdaBase * g * B * baseSat
-  // 用于殖民地得 lambdaColony * g * B * colonySat / cost * discount
-  // 令两者相等，但这里lambda已经包含了积分因子，因此直接比较lambdaBase与lambdaColony * colonySat因子？
-
-  // 实际上我们应使投资在两种用途上的边际价值增量相等：
-  const marginalBase = lambdaBase * baseSat // 当前基础投资对终值的边际贡献
+  // 边际价值增量计算
+  const marginalBase = lambdaBase * baseSat
   const marginalColony =
     ((lambdaColony * colonySat) / constants.colonizationCost) *
     Math.pow(1 + g, -constants.colonizationDelay)
 
-  // 投资比例应使得两者相等，但只有两个用途，我们可以采用类似soft的比例分配：
-  const k = marginalColony / (marginalBase + marginalColony)
+  // 防止分母为零或负数
+  const totalMarginal = marginalBase + marginalColony
+  let k = totalMarginal > 0 ? marginalColony / totalMarginal : 0
+
+  // 裁剪到合法区间 [0, 1]
+  k = Math.min(1, Math.max(0, k))
 
   return {
     baseInvestment: state.baseProductivity * (1 - k),
@@ -219,7 +222,6 @@ export const hybridColonize: Strategy = (
     // 我们使用更直接的判断：如果剩余时间足够长，殖民地复利将碾压基础饱和收益
     const effectiveRemaining = Math.max(0, remaining - delay)
     const colonyGrowthFactor = Math.pow(1 + g, effectiveRemaining)
-    const baseMaxPotential = baseCap - state.baseProductivity // 最多还能增长多少
 
     // 临界判断：殖民地单位投资的终值 ≈ (g / cost) * colonyGrowthFactor
     // 基础单位投资的终值 ≈ g * baseSat * (有限增长，最终受容量限制)
@@ -306,9 +308,9 @@ export const evaluate = (
     const decision = strategy(state, constants, currentGeneration)
     if (
       decision.baseInvestment + decision.colonyInvestment >
-      state.baseProductivity + 0.001 // float precision
-      || decision.baseInvestment < 0
-      || decision.colonyInvestment < 0
+        state.baseProductivity + 0.001 || // float precision
+      decision.baseInvestment < 0 ||
+      decision.colonyInvestment < 0
     ) {
       throw new Error()
     }
