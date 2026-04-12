@@ -8,7 +8,8 @@ import {
   CardTitle,
 } from './shadcn-solid/Card'
 import {
-  differentialGreedyColonize,
+  softGreedyColonize,
+  greedyColonize,
   evaluate,
   neverColonize,
   pieceWiseColonise,
@@ -75,10 +76,10 @@ export const Model = () => {
   const [pieceWiseColoniseEnabled, setPieceWiseColoniseEnabled] =
     createSignal(false)
 
-  const [
-    differentialGreedyColonizeEnabled,
-    setDifferentialGreedyColonizeEnabled,
-  ] = createSignal(false)
+  const [greedyColonizeEnabled, setGreedyColonizeEnabled] = createSignal(false)
+
+  const [softGreedyColonizeEnabled, setSoftGreedyColonizeEnabled] =
+    createSignal(false)
 
   const neverColonizeResult = createMemo(() => {
     return evaluate(constants(), neverColonize, generation())
@@ -103,7 +104,7 @@ export const Model = () => {
 
     if (neverColonizeEnabled()) {
       data.push({
-        label: 'Never Colonize',
+        label: 'Never',
         data: neverColonizeResult().map((state, index) => ({
           x: index,
           y: state.baseProductivity + state.colonyProductivity,
@@ -134,17 +135,28 @@ export const Model = () => {
       })
     }
 
-    if (differentialGreedyColonizeEnabled()) {
+    if (greedyColonizeEnabled()) {
       data.push({
-        label: 'Greedy Differential',
-        data: evaluate(
-          constants(),
-          differentialGreedyColonize,
-          generation(),
-        ).map((state, index) => ({
-          x: index,
-          y: state.baseProductivity + state.colonyProductivity,
-        })),
+        label: 'Greedy',
+        data: evaluate(constants(), greedyColonize, generation()).map(
+          (state, index) => ({
+            x: index,
+            y: state.baseProductivity + state.colonyProductivity,
+          }),
+        ),
+        borderWidth: 1,
+      })
+    }
+
+    if (softGreedyColonizeEnabled()) {
+      data.push({
+        label: 'Soft Greedy',
+        data: evaluate(constants(), softGreedyColonize, generation()).map(
+          (state, index) => ({
+            x: index,
+            y: state.baseProductivity + state.colonyProductivity,
+          }),
+        ),
         borderWidth: 1,
       })
     }
@@ -319,7 +331,7 @@ export const Model = () => {
                   <SwitchLabel>Enabled</SwitchLabel>
                 </Switch>
               </ConfigSection>
-              <ConfigSection title="Proportional">
+              <ConfigSection title="Proportional Invest Colonize">
                 <Switch
                   class="flex items-center space-x-2"
                   checked={proportionalColonizeEnabled()}
@@ -355,7 +367,7 @@ export const Model = () => {
                   </SliderTrack>
                 </Slider>
               </ConfigSection>
-              <ConfigSection title="Piecewise">
+              <ConfigSection title="Piecewise Never then Proportional">
                 <Switch
                   class="flex items-center space-x-2"
                   checked={pieceWiseColoniseEnabled()}
@@ -370,8 +382,20 @@ export const Model = () => {
               <ConfigSection title="Greedy Differential Algorithm">
                 <Switch
                   class="flex items-center space-x-2"
-                  checked={differentialGreedyColonizeEnabled()}
-                  onChange={setDifferentialGreedyColonizeEnabled}
+                  checked={greedyColonizeEnabled()}
+                  onChange={setGreedyColonizeEnabled}
+                >
+                  <SwitchControl>
+                    <SwitchThumb />
+                  </SwitchControl>
+                  <SwitchLabel>Enabled</SwitchLabel>
+                </Switch>
+              </ConfigSection>
+              <ConfigSection title="Soft Greedy Differential Algorithm">
+                <Switch
+                  class="flex items-center space-x-2"
+                  checked={softGreedyColonizeEnabled()}
+                  onChange={setSoftGreedyColonizeEnabled}
                 >
                   <SwitchControl>
                     <SwitchThumb />
