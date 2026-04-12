@@ -24,7 +24,7 @@
     "debounce": "^3.0.0",
     "solid-js": "^1.9.12",
     "tailwind-merge": "^3.5.0",
-    "tailwind-variants": "^",
+    "tailwind-variants": "*",
     "tailwindcss": "^4",
     "tailwindcss-animate": "^1.0.7",
     "tw-animate-css": "^1"
