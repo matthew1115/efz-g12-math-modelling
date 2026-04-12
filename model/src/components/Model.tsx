@@ -67,13 +67,24 @@ export const Model = () => {
 
   const [proportionalColonizeEnabled, setProportionalColonizeEnabled] =
     createSignal(false)
-
   const [proportion, setProportion] = createSignal(1 / 2)
   const [proportionSlider, setProportionSlider] = createSignal(proportion())
   const handleProportionChange = debounce(setProportion, 100)
 
   const [pieceWiseColoniseEnabled, setPieceWiseColoniseEnabled] =
     createSignal(false)
+  const [threshold, setThreshold] = createSignal(1 / 2)
+  const [thresholdSlider, setThresholdSlider] = createSignal(threshold())
+  const handleThresholdChange = debounce(setThreshold, 100)
+  const [proportionAfterThreshold, setProportionAfterThreshold] = createSignal(
+    1 / 2,
+  )
+  const [proportionAfterThresholdSlider, setProportionAfterThresholdSlider] =
+    createSignal(proportionAfterThreshold())
+  const handleProportionAfterThresholdChange = debounce(
+    setProportionAfterThreshold,
+    100,
+  )
 
   const [greedyColonizeEnabled, setGreedyColonizeEnabled] = createSignal(false)
 
@@ -95,7 +106,7 @@ export const Model = () => {
   const data = createMemo(() => {
     const piecewiseColonizeResult = evaluate(
       constants(),
-      pieceWiseColonise(1 / 2, 1 / 2),
+      pieceWiseColonise(threshold(), proportionAfterThreshold()),
     )
 
     const data: ChartDataset[] = []
@@ -389,16 +400,68 @@ export const Model = () => {
                 </Slider>
               </ConfigSection>
               <ConfigSection title="Piecewise Never then Proportional">
-                <Switch
-                  class="flex items-center space-x-2"
-                  checked={pieceWiseColoniseEnabled()}
-                  onChange={setPieceWiseColoniseEnabled}
-                >
-                  <SwitchControl>
-                    <SwitchThumb />
-                  </SwitchControl>
-                  <SwitchLabel>Enabled</SwitchLabel>
-                </Switch>
+                <div class="flex flex-col gap-4">
+                  <Switch
+                    class="flex items-center space-x-2"
+                    checked={pieceWiseColoniseEnabled()}
+                    onChange={setPieceWiseColoniseEnabled}
+                  >
+                    <SwitchControl>
+                      <SwitchThumb />
+                    </SwitchControl>
+                    <SwitchLabel>Enabled</SwitchLabel>
+                  </Switch>
+                  <Slider
+                    hidden={!pieceWiseColoniseEnabled()}
+                    minValue={0}
+                    maxValue={1}
+                    step={0.001}
+                    value={[thresholdSlider()]}
+                    onChange={(x) => {
+                      if (!isNaN(x[0])) {
+                        setThresholdSlider(x[0])
+                        handleThresholdChange(x[0])
+                      }
+                    }}
+                    getValueLabel={(params) => `${params.values[0]}`}
+                    class="space-y-3"
+                  >
+                    <div class="flex w-full justify-between">
+                      <SliderLabel>Threshold</SliderLabel>
+                      <SliderValueLabel />
+                    </div>
+                    <SliderTrack>
+                      <SliderFill class="bg-foreground" />
+                      <SliderThumb class="border-muted-foreground bg-muted" />
+                    </SliderTrack>
+                  </Slider>
+                </div>
+                <div class="flex flex-col-reverse gap-4">
+                  <Slider
+                    hidden={!pieceWiseColoniseEnabled()}
+                    minValue={0}
+                    maxValue={1}
+                    step={0.001}
+                    value={[proportionAfterThresholdSlider()]}
+                    onChange={(x) => {
+                      if (!isNaN(x[0])) {
+                        setProportionAfterThresholdSlider(x[0])
+                        handleProportionAfterThresholdChange(x[0])
+                      }
+                    }}
+                    getValueLabel={(params) => `${params.values[0]}`}
+                    class="space-y-3"
+                  >
+                    <div class="flex w-full justify-between">
+                      <SliderLabel>Proportion after Threshold</SliderLabel>
+                      <SliderValueLabel />
+                    </div>
+                    <SliderTrack>
+                      <SliderFill class="bg-foreground" />
+                      <SliderThumb class="border-muted-foreground bg-muted" />
+                    </SliderTrack>
+                  </Slider>
+                </div>
               </ConfigSection>
               <ConfigSection title="Greedy Differential Algorithm">
                 <Switch
