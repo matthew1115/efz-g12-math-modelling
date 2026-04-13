@@ -1,0 +1,5 @@
+# Ignore generated presentation artifacts, but keep source and exported PDF files.
+presentation/**
+!presentation/*.tex
+!presentation/*.pdf
+!presentation/**/
